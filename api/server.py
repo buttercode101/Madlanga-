@@ -33,7 +33,7 @@ def init_db():
     detailed={h["day"]:h for h in d["hearings"]}
     for day in range(1,179):
         h=detailed.get(day)
-        if h: c.execute("INSERT OR REPLACE INTO hearings VALUES(?,?,?,?,?,?)",(day,h["date"],json.dumps(h["witnesses"]),h.get("lead"),h["url"],"detailed"))
+        if h: c.execute("INSERT OR REPLACE INTO hearings VALUES(?,?,?,?,?,?)",(day,h["date"],json.dumps(h.get("witnesses", [])),h.get("lead"),h["url"],"detailed"))
         else: c.execute("INSERT OR IGNORE INTO hearings VALUES(?,?,?,?,?,?)",(day,None,"[]",None,None,"index_only"))
     c.commit(); c.close()
 
