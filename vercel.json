@@ -3,7 +3,6 @@
   "outputDirectory": "evidence-room/dist",
   "devCommand": "cd evidence-room && npm run dev",
   "installCommand": "cd evidence-room && npm install && pip install -r ../api/requirements.txt",
-  "framework": "vite",
   "functions": {
     "api/*.py": {
       "runtime": "python3.11",
