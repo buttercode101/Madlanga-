@@ -1,44 +1,5 @@
 import React, { useState, useEffect } from 'react'
 
-// Mock data for demo - in production this calls the API
-const mockResponses = {
-  "established": {
-    answer: "FINDING: The Madlanga Commission was established by President Cyril Ramaphosa via Gazette 53048 (Proclamation 269 of 2025) in July 2025, to investigate allegations by Lt-Gen Nhlanhla Mkhwanazi of criminality, political interference, and corruption in the criminal justice system.",
-    gate: { pass: true, reasons: [], sources_used: ["s1", "s3"], contradictions: [], gaps: [] },
-    provenance: { sources_used: [{id: "s1", tier: "PRIMARY"}, {id: "s3", tier: "PRIMARY"}], claims_referenced: ["C-001"], documents: [], exhibits: [] },
-    contradictions: [],
-    evidence_gaps: []
-  },
-  "mkhwanazi": {
-    answer: "NO FINDING: Insufficient evidence for Lt-Gen Mkhwanazi's claim that 121 dockets were removed in March 2025. Only 1 Tier 1-4 source (his own testimony) supports this claim. An unresolved contradiction exists with other testimony.",
-    gate: { pass: false, reasons: ["Insufficient Tier 1-4 sources: 1 found, minimum 2 required", "Unresolved contradiction: contra.mkhwanazi.vs.sibiya.dockets"], sources_used: ["s1"], contradictions: ["contra.mkhwanazi.vs.sibiya.dockets"], gaps: ["q.f92a7399f33de14a"] },
-    provenance: { sources_used: [{id: "s1", tier: "PRIMARY"}], claims_referenced: ["C-003"], documents: [], exhibits: [] },
-    contradictions: ["contra.mkhwanazi.vs.sibiya.dockets"],
-    evidence_gaps: ["q.f92a7399f33de14a"]
-  },
-  "madlanga": {
-    answer: "FINDING: Justice Mbuyiseli Madlanga (retired Constitutional Court judge) chairs the commission. Established per Gazette 53048 with mandate covering infiltration by syndicates, oversight failure, legislative review, and referrals for criminal investigation.",
-    gate: { pass: true, reasons: [], sources_used: ["s1", "s2", "s5"], contradictions: [], gaps: [] },
-    provenance: { sources_used: [{id: "s1", tier: "PRIMARY"}, {id: "s2", tier: "PRIMARY"}, {id: "s5", tier: "PUBLIC RECORD ARCHIVE"}], claims_referenced: ["C-002"], documents: [], exhibits: [] },
-    contradictions: [],
-    evidence_gaps: []
-  },
-  "contradiction": {
-    answer: "3 unresolved contradictions detected in evidence base:\n\n1. <strong>contra.mkhwanazi.vs.sibiya.dockets</strong> — Direct conflict between Mkhwanazi testimony (121 dockets removed) and Sibiya testimony (no such removal order)\n\n2. <strong>contra.sindane.medical.urgency</strong> — Documentary vs oral conflict on medical urgency timeline\n\n3. <strong>contra.mogotsi.recusal</strong> — Recusal application contradiction",
-    gate: { pass: false, reasons: [], sources_used: [], contradictions: ["contra.mkhwanazi.vs.sibiya.dockets", "contra.sindane.medical.urgency", "contra.mogotsi.recusal"], gaps: [] },
-    provenance: { sources_used: [], claims_referenced: [], documents: [], exhibits: [] },
-    contradictions: ["contra.mkhwanazi.vs.sibiya.dockets", "contra.sindane.medical.urgency", "contra.mogotsi.recusal"],
-    evidence_gaps: []
-  },
-  "budget": {
-    answer: "FINDING: National Treasury revealed R147 million spent on the Madlanga Commission as of November 2025 (per Medium Term Budget Policy Statement). The commission started September 17, 2025 with hearings at Brigitte Mabandla Justice College.",
-    gate: { pass: true, reasons: [], sources_used: ["s4"], contradictions: [], gaps: [] },
-    provenance: { sources_used: [{id: "s4", tier: "PRIMARY"}], claims_referenced: ["C-004"], documents: [], exhibits: [] },
-    contradictions: [],
-    evidence_gaps: []
-  }
-}
-
 const tierLabels = {
   "PRIMARY": "Tier 1 — Primary Official",
   "PUBLIC RECORD ARCHIVE": "Tier 2 — Commission Record",
@@ -57,15 +18,22 @@ const quickQueries = [
   { label: "Budget R147M", query: "What is the budget spent so far?" }
 ]
 
-function matchQuery(query) {
-  const q = query.toLowerCase()
-  if (q.includes('establish') || q.includes('when was') || q.includes('gazette')) return 'established'
-  if (q.includes('mkhwanazi') || q.includes('docket') || q.includes('121')) return 'mkhwanazi'
-  if (q.includes('madlanga') || q.includes('chair') || q.includes('judge')) return 'madlanga'
-  if (q.includes('contradict') || q.includes('conflict')) return 'contradiction'
-  if (q.includes('budget') || q.includes('r147') || q.includes('money') || q.includes('spent')) return 'budget'
-  if (q.includes('political') || q.includes('interference') || q.includes('corruption')) return 'madlanga'
-  return 'established'
+async function fetchSearch(query) {
+  const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+  if (!res.ok) throw new Error('Search failed')
+  return res.json()
+}
+
+async function fetchClaim(claimId) {
+  const res = await fetch(`/api/claim/${claimId}`)
+  if (!res.ok) throw new Error('Claim fetch failed')
+  return res.json()
+}
+
+async function fetchContradictions() {
+  const res = await fetch('/api/contradictions')
+  if (!res.ok) throw new Error('Contradictions fetch failed')
+  return res.json()
 }
 
 function App() {
@@ -87,9 +55,69 @@ function App() {
   const handleSearch = async (q) => {
     setQuery(q)
     setLoading(true)
-    await new Promise(r => setTimeout(r, 1200))
-    const key = matchQuery(q)
-    setResult(mockResponses[key])
+    try {
+      // First search for relevant claims
+      const searchResult = await fetchSearch(q)
+      const claims = searchResult.claims || []
+      
+      if (claims.length === 0) {
+        setResult({
+          answer: "I don't have sufficient sourced evidence to answer that.",
+          gate: { pass: false, reasons: ['No matching claims found'], sources_used: [], contradictions: [], gaps: [] },
+          provenance: { sources_used: [], claims_referenced: [], documents: [], exhibits: [] },
+          contradictions: [],
+          evidence_gaps: []
+        })
+        setLoading(false)
+        return
+      }
+      
+      // Fetch detailed claim info for the top claim
+      const claimId = claims[0]
+      const claimDetail = await fetchClaim(claimId)
+      const contradictions = await fetchContradictions()
+      
+      // Build response
+      const gate = claimDetail.gate || { pass: false, reasons: [] }
+      const claimSources = claimDetail.claim?.sources || []
+      
+      let answer = ''
+      if (gate.pass) {
+        answer = `FINDING: ${claimDetail.claim?.statement || 'Claim established'}. — Sources: ${claimSources.join(', ')}`
+      } else {
+        const reasons = gate.reasons || ['Insufficient evidence']
+        const contras = claimDetail.contradictions || []
+        answer = `NO FINDING: ${reasons.join('; ')}. Contradictions: ${contras.join(', ')}`
+      }
+      
+      setResult({
+        answer,
+        gate: {
+          pass: gate.pass,
+          reasons: reasons,
+          sources_used: searchResult.sources,
+          contradictions: claimDetail.contradictions || [],
+          gaps: gate.gaps || []
+        },
+        provenance: {
+          sources_used: searchResult.sources,
+          claims_referenced: [claimId],
+          documents: searchResult.documents,
+          exhibits: []
+        },
+        contradictions: contradictions.contradictions || [],
+        evidence_gaps: gate.gaps || []
+      })
+    } catch (err) {
+      console.error('Search error:', err)
+      setResult({
+        answer: "Error retrieving evidence. Please try again.",
+        gate: { pass: false, reasons: [err.message], sources_used: [], contradictions: [], gaps: [] },
+        provenance: { sources_used: [], claims_referenced: [], documents: [], exhibits: [] },
+        contradictions: [],
+        evidence_gaps: []
+      })
+    }
     setLoading(false)
   }
 
