@@ -2,9 +2,9 @@
   "buildCommand": "cd evidence-room && npm install && npm run build",
   "outputDirectory": "evidence-room/dist",
   "devCommand": "cd evidence-room && npm run dev",
-  "installCommand": "cd evidence-room && npm install && pip install -r ../api/requirements.txt",
+  "installCommand": "cd evidence-room && npm install && pip install -r api/requirements.txt",
   "functions": {
-    "api/*.py": {
+    "evidence-room/api/*.py": {
       "runtime": "python3.11",
       "maxDuration": 60
     }

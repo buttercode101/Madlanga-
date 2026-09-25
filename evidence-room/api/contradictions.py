@@ -7,7 +7,10 @@ sys.path.insert(0, os.path.dirname(__file__))
 from madlanga_tools import retrieve, get_claim, get_contradictions, check_gate
 import sqlite3
 
-DB_PATH = '/home/ubuntu/.hermes/cache/documents/madlanga-extracted/madlanga-work/data/evidence.db'
+# Use local database file (copied to api/ for Vercel)
+SKILLS_DIR = os.path.dirname(os.path.abspath(__file__))
+LOCAL_DB = os.path.join(SKILLS_DIR, 'evidence.db')
+DB_PATH = LOCAL_DB if os.path.exists(LOCAL_DB) else '/home/ubuntu/.hermes/cache/documents/madlanga-extracted/madlanga-work/data/evidence.db'
 
 def get_contradiction_details(contra_id: str):
     """Get full contradiction details from database"""

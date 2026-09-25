@@ -21,7 +21,7 @@ except ImportError:
 
 # Paths
 SKILLS_DIR = Path(__file__).parent
-EXTRACTED_DIR = Path(os.path.dirname(os.path.dirname(SKILLS_DIR))) / 'cache' / 'documents' / 'madlanga-extracted' / 'madlanga-work'
+EXTRACTED_DIR = Path(os.path.dirname(os.path.dirname(os.path.dirname(SKILLS_DIR)))) / '.hermes' / 'cache' / 'documents' / 'madlanga-extracted' / 'madlanga-work'
 DATA_DIR = EXTRACTED_DIR / 'data'
 # Check for commission.json in local api directory first (for Vercel deployment)
 LOCAL_COMMISSION = SKILLS_DIR / 'commission.json'
