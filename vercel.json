@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd evidence-room && npm install && npm run build",
+  "outputDirectory": "evidence-room/dist",
+  "devCommand": "cd evidence-room && npm run dev",
+  "installCommand": "cd evidence-room && npm install",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

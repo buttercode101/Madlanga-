@@ -1,6 +1,47 @@
+# Python
 __pycache__/
-*.pyc
-.pytest_cache/
-madlanga.db
-*.sqlite3
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 .env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+*.sqlite3
+madlanga.db
+
+# Evidence Room
+evidence-room/node_modules
+evidence-room/dist
+evidence-room/.vite
+evidence-room/*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
