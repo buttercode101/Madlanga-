@@ -1,8 +1,8 @@
 {
-  "buildCommand": "cd evidence-room && npm install && npm run build && pip install -r api/requirements.txt",
+  "buildCommand": "cd evidence-room && npm install && npm run build",
   "outputDirectory": "evidence-room/dist",
   "devCommand": "cd evidence-room && npm run dev",
-  "installCommand": "cd evidence-room && npm install && pip install -r api/requirements.txt",
+  "installCommand": "cd evidence-room && npm install && pip install -r ../api/requirements.txt",
   "framework": "vite",
   "functions": {
     "api/*.py": {
