@@ -31,7 +31,9 @@ def seed():
     for x in d.get("claims",[]):
         c.execute("INSERT OR IGNORE INTO claims VALUES(?,?,?,?)",(x["id"],x["statement"],x["classification"],x.get("verification_state","verified")))
         for sid in x.get("source_ids",[]): c.execute("INSERT OR IGNORE INTO claim_sources VALUES(?,?)",(x["id"],sid))
-    for h in d.get("hearings",[]): c.execute("INSERT OR IGNORE INTO hearings VALUES(?,?,?,?,?)",(h["day"],h.get("date"),h.get("title"),h.get("url"),h.get("state","detailed")))
+    for day in range(1,179):
+        c.execute("INSERT OR IGNORE INTO hearings VALUES(?,?,?,?,?)",(day,None,"Sitting day %d — source material not yet ingested"%day,None,"index_only"))
+    for h in d.get("hearings",[]): c.execute("UPDATE hearings SET date=?,title=?,url=?,state=? WHERE day=?",(h.get("date"),h.get("title"),h.get("url"),h.get("state","detailed"),h["day"]))
     c.commit(); c.close()
 
 def rows(sql,args=()):
